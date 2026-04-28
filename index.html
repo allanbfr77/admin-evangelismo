@@ -211,6 +211,11 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
   color: var(--text); white-space: nowrap; padding-left: 6px;
 }
 .avail-table td.td-name.no-data { color: var(--text-3); font-weight: 400; }
+/* ── NOVO: nome verde quando escalado em ao menos uma data ── */
+.avail-table td.td-name.scheduled {
+  color: var(--green);
+  font-weight: 700;
+}
 .avail-table tr:nth-child(even) td { background: rgba(255,255,255,0.025); }
 .avail-table tr:nth-child(odd)  td { background: rgba(255,255,255,0.06); }
 .avail-check { color: var(--green); font-size: 11px; font-weight: 700; }
@@ -317,7 +322,7 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
     <span class="topbar-badge">Maio 2026</span>
     <div class="topbar-spacer"></div>
     <div class="topbar-status"><div class="status-dot"></div><span>Online</span></div>
-    <button class="btn-logout" onclick="location.reload()">Sair</button>
+    <button class="btn-logout" onclick="doLogout()">Sair</button>
   </div>
 
   <div class="layout">
@@ -364,7 +369,6 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
             <strong>Disponibilidades dos Membros</strong>
           </div>
           <span class="avail-eye" id="avail-eye">
-            <!-- eye-closed (default: section closed) -->
             <svg id="avail-eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
               <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
@@ -411,20 +415,58 @@ var MEMBERS = [
 var memberData = {};
 var schedule = {};
 GROUP_DATES.forEach(function(d){ schedule[d.key] = []; });
-var selectedPerson = null; // single selection only
+var selectedPerson = null;
+
+/* ── PERSISTÊNCIA ── */
+var STORAGE_KEY = 'escala_evangelismo_maio2026';
+var SESSION_KEY = 'escala_session_maio2026';
+
+function saveSchedule() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(schedule)); } catch(e) {}
+}
+
+function loadSchedule() {
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      var parsed = JSON.parse(saved);
+      GROUP_DATES.forEach(function(d) {
+        if (Array.isArray(parsed[d.key])) schedule[d.key] = parsed[d.key];
+      });
+    }
+  } catch(e) {}
+}
+
+function saveSession()  { try { sessionStorage.setItem(SESSION_KEY, '1'); } catch(e) {} }
+function clearSession() { try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {} }
+function hasSession()   { try { return sessionStorage.getItem(SESSION_KEY) === '1'; } catch(e) { return false; } }
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadSchedule();
+  loadSheet();
+}
+
+function doLogout() {
+  clearSession();
+  location.reload();
+}
 
 /* ── AUTH ── */
 function doLogin() {
   var u = document.getElementById('login-user').value;
   var p = document.getElementById('login-pass').value;
   if (u === ADMIN_USER && p === ADMIN_PASS) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    loadSheet();
+    saveSession();
+    showApp();
   } else {
     document.getElementById('login-err').style.display = 'block';
   }
 }
+
+/* ── Auto-login se sessão ativa ── */
+(function() { if (hasSession()) showApp(); })();
 
 function togglePass() {
   var inp = document.getElementById('login-pass');
@@ -497,6 +539,13 @@ function processSheetData(rows) {
   renderAll();
 }
 
+/* ── HELPER: verifica se um membro está escalado em ao menos uma data ── */
+function isScheduled(name) {
+  return GROUP_DATES.some(function(d) {
+    return schedule[d.key].includes(name);
+  });
+}
+
 /* ── RENDER ALL ── */
 function renderAll() {
   renderSidebar();
@@ -505,7 +554,7 @@ function renderAll() {
   renderAvailGrid();
 }
 
-/* ── SIDEBAR (single select) ── */
+/* ── SIDEBAR ── */
 function renderSidebar() {
   var list   = document.getElementById('sidebar-list');
   var filter = document.getElementById('search-input').value.toLowerCase();
@@ -583,6 +632,7 @@ function toggleAlloc(name, dk) {
   var idx = schedule[dk].indexOf(name);
   if (idx > -1) schedule[dk].splice(idx, 1);
   else schedule[dk].push(name);
+  saveSchedule();
   renderAll();
   renderPanel();
 }
@@ -597,7 +647,6 @@ function toggleAvail() {
   var icon   = document.getElementById('avail-eye-icon');
   header.classList.toggle('open', availOpen);
   body.classList.toggle('open', availOpen);
-  // eye-open SVG when section is open
   icon.innerHTML = availOpen
     ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
     : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
@@ -617,10 +666,16 @@ function renderAvailGrid() {
     chunk.forEach(function(name) {
       var data    = memberData[name];
       var hasData = data && data.dates && data.dates.length > 0;
-      html += '<tr><td class="td-name' + (hasData ? '' : ' no-data') + '">' + name + '</td>';
+      // Verifica se o membro está escalado em ao menos uma data
+      var scheduled = isScheduled(name);
+      // Monta as classes do td do nome
+      var nameClass = 'td-name';
+      if (scheduled) nameClass += ' scheduled';
+      else if (!hasData) nameClass += ' no-data';
+      html += '<tr><td class="' + nameClass + '">' + name + '</td>';
       GROUP_DATES.forEach(function(d) {
         var avail = hasData && data.dates.includes(d.key);
-        html += '<td>' + (avail ? '<span class="avail-check">✓</span>' : '') + '</td>';
+        html += '<td>' + (avail ? '<span class="avail-check">✓</span>' : '<span style="color:var(--text-3);font-size:11px;">—</span>') + '</td>';
       });
       html += '</tr>';
     });
@@ -658,6 +713,7 @@ function hideLoading() { document.getElementById('loading-overlay').classList.ad
 function clearAll() {
   if (confirm('Limpar escala?')) {
     GROUP_DATES.forEach(function(d){ schedule[d.key] = []; });
+    saveSchedule();
     renderAll();
   }
 }

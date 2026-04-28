@@ -6,6 +6,9 @@
 var SHEET_ID  = '1ZUdYCsNxyt4z8B5KgdtQNpBKHJxuMQAI0EW4fT68akc';
 var DATE_COLS = ['06/mai', '09/mai', '20/mai', '24/mai', '30/mai'];
 
+/** Ordem cronológica das datas da escala (igual ao GROUP_DATES no front). Linhas na planilha seguem esta ordem; dentro de cada data, ordem do array = ordem de inserção. */
+var SCHEDULE_DATE_KEYS = ['2026-05-06', '2026-05-09', '2026-05-20', '2026-05-24', '2026-05-30'];
+
 /* ════════════════════════════════════════
    ROTEADOR
    ════════════════════════════════════════ */
@@ -202,11 +205,12 @@ function setScheduleData(schedJson) {
   var rows = [];
   var seen = {};
 
-  Object.keys(sched).forEach(function(rawDate) {
-    var date = normalizeDate(rawDate);
+  function appendRowsForDateKey(rawDateKey) {
+    if (!sched.hasOwnProperty(rawDateKey)) return;
+    var date = normalizeDate(rawDateKey);
     if (!date) return;
 
-    var names = sched[rawDate];
+    var names = sched[rawDateKey];
     if (!Array.isArray(names)) return;
 
     for (var n = 0; n < names.length; n++) {
@@ -219,11 +223,15 @@ function setScheduleData(schedJson) {
 
       rows.push([date, name]);
     }
-  });
+  }
 
-  rows.sort(function(a, b) {
-    if (a[0] !== b[0]) return a[0] < b[0] ? -1 : 1;
-    return a[1].toUpperCase() < b[1].toUpperCase() ? -1 : 1;
+  for (var di = 0; di < SCHEDULE_DATE_KEYS.length; di++) {
+    appendRowsForDateKey(SCHEDULE_DATE_KEYS[di]);
+  }
+
+  Object.keys(sched).forEach(function(k) {
+    if (SCHEDULE_DATE_KEYS.indexOf(k) !== -1) return;
+    appendRowsForDateKey(k);
   });
 
   for (var r = 0; r < rows.length; r++) {

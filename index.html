@@ -577,7 +577,8 @@ function loadScheduleFromSheet() {
       GROUP_DATES.forEach(function(d) { schedule[d.key] = []; });
       Object.keys(sched).forEach(function(rawKey) {
         var key = formatDateForCode(rawKey);
-        if (key && Array.isArray(sched[rawKey])) schedule[key] = sched[rawKey];
+        if (!key || !Array.isArray(sched[rawKey])) return;
+        schedule[key] = sched[rawKey].slice();
       });
       dedupeScheduleEntries();
       saveSchedule();

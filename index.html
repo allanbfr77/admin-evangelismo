@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Escala Admin — Ministério de Evangelismo & Introdução — Maio 2026</title>
+<title>Escala Admin — Ministério de Evangelismo & Integração — Maio 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -322,7 +322,7 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
     <div class="login-logo">
       <div class="login-logo-icon">✝</div>
       <div>
-        <div class="login-logo-text">Ministério de Evangelismo & Introdução</div>
+        <div class="login-logo-text">Ministério de Evangelismo & Integração</div>
         <div class="login-logo-sub">Painel Administrativo</div>
       </div>
     </div>
@@ -1007,29 +1007,30 @@ function doDownload() {
   var wrap = document.createElement('div');
   wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:900px;padding:48px 52px;background:#f8f9fb;font-family:DM Sans,Arial,sans-serif;color:#0f172a;';
   var dayMap = { 'Quarta': 'QUARTA-FEIRA', 'Sábado': 'SÁBADO', 'Domingo': 'DOMINGO' };
+  var bd = '#cbd5e1';
   var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-    + '<div style="font-size:13px;font-weight:700;letter-spacing:1.5px;color:#6b7a99;text-transform:uppercase;">GRUPO DE EVANGELISMO</div>'
+    + '<div style="font-size:13px;font-weight:700;letter-spacing:1.5px;color:#6b7a99;text-transform:uppercase;">MINISTÉRIO DE EVANGELISMO & INTEGRAÇÃO</div>'
     + '<div style="font-size:13px;font-weight:600;color:#6b7a99;letter-spacing:1px;">MAIO 2026</div></div>'
-    + '<div style="height:2px;background:#e2e8f0;margin-bottom:28px;"></div>'
-    + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;"><thead><tr>';
+    + '<div style="height:2px;background:' + bd + ';margin-bottom:28px;"></div>'
+    + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;border:1px solid ' + bd + ';"><thead><tr>';
   GROUP_DATES.forEach(function(d) {
     var dayLabel  = dayMap[d.day] || d.day.toUpperCase();
     var dateLabel = d.full;
-    html += '<th style="padding:14px 12px;background:#fff;border:1px solid #e2e8f0;text-align:center;vertical-align:top;">'
+    html += '<th style="padding:14px 12px;background:#fff;border:1px solid ' + bd + ';text-align:center;vertical-align:top;">'
       + '<div style="font-size:11px;font-weight:700;color:#5b6fa8;letter-spacing:.8px;margin-bottom:4px;">' + dayLabel + '</div>'
       + '<div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px;">' + dateLabel + '</div>'
-      + '<div style="font-size:11px;color:#94a3b8;">' + d.hora + '</div></th>';
+      + '<div style="font-size:11px;color:#000000;font-weight:600;">' + d.hora + '</div></th>';
   });
   html += '</tr></thead><tbody><tr>';
   GROUP_DATES.forEach(function(d) {
     var names = schedule[d.key] || [];
-    html += '<td style="padding:0;border:1px solid #e2e8f0;vertical-align:top;background:#f8f9fb;text-align:center;">';
+    html += '<td style="padding:0;border:1px solid ' + bd + ';vertical-align:top;background:#f8f9fb;text-align:center;">';
     if (!names.length) {
       html += '<div style="padding:12px;color:#cbd5e1;font-size:14px;">—</div>';
     } else {
       names.forEach(function(name, i) {
         var bg = i % 2 === 0 ? '#f8f9fb' : '#eef1f6';
-        html += '<div style="padding:8px 12px;background:' + bg + ';font-size:12px;font-weight:700;color:#0f172a;text-align:center;border-bottom:1px solid #e2e8f0;">' + name + '</div>';
+        html += '<div style="padding:8px 12px;background:' + bg + ';font-size:12px;font-weight:700;color:#0f172a;text-align:center;border-bottom:1px solid ' + bd + ';">' + name + '</div>';
       });
     }
     html += '</td>';

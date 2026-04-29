@@ -83,24 +83,31 @@ html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(-
 
 .topbar {
   height: 56px; background: var(--surface); border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; padding: 0 24px; gap: 16px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center; padding: 0 24px; gap: 12px;
   position: sticky; top: 0; z-index: 100;
 }
-.topbar-title { font-size: 14px; font-weight: 700; }
+.topbar-left,
+.topbar-center,
+.topbar-right { display: flex; align-items: center; }
+.topbar-left { justify-content: flex-start; min-width: 0; gap: 12px; }
+.topbar-center { justify-content: center; }
+.topbar-right { justify-content: flex-end; gap: 10px; min-width: 0; }
+.topbar-title { font-size: 14px; font-weight: 700; white-space: nowrap; }
 .topbar-badge {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
-  padding: 3px 8px; border-radius: 100px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase;
+  padding: 4px 10px; border-radius: 100px;
   background: var(--green-glow); color: var(--green); border: 1px solid rgba(63,185,80,.3);
 }
-.topbar-spacer { flex: 1; }
 .topbar-status { font-size: 12px; color: var(--text-2); display: flex; align-items: center; gap: 6px; }
 .save-status { font-size: 11px; font-weight: 600; letter-spacing: 0.2px; min-width: 90px; text-align: right; transition: color .3s; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s ease-in-out infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 .btn-logout {
-  padding: 6px 12px; font-size: 12px; font-weight: 600;
+  width: 32px; height: 32px; padding: 0;
   background: transparent; border: 1px solid var(--border);
-  color: var(--text-2); border-radius: 6px; cursor: pointer; transition: all .15s;
+  color: var(--text-2); border-radius: 8px; cursor: pointer; transition: all .15s;
+  display: inline-flex; align-items: center; justify-content: center;
 }
 .btn-logout:hover { border-color: var(--red); color: var(--red); }
 
@@ -154,14 +161,56 @@ html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(-
 
 /* ── MAIN ── */
 .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-.main-header { flex-shrink: 0; padding: 24px 24px 0; display: flex; flex-direction: column; gap: 16px; }
+.main-header { flex-shrink: 0; padding: 24px 24px 0; display: grid; gap: 16px; }
 .main-content { flex: 1; overflow: auto; padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 20px; }
 .main-content > * { flex-shrink: 0; }
-.toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.toolbar-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .toolbar-title { font-size: 18px; font-weight: 700; }
-.btn { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; gap: 6px; transition: all .15s; }
-.btn-green { background: var(--green-dim); color: #fff; }
-.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text-2); }
+.action-bar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  padding: 12px; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border);
+}
+.btn {
+  padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 7px;
+  transition: all .15s; min-height: 36px;
+}
+.btn svg { width: 14px; height: 14px; }
+.btn-primary {
+  background: var(--green-dim); color: #fff;
+  box-shadow: 0 0 14px rgba(63,185,80,.2);
+}
+.btn-primary:hover { background: var(--green); }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--text-2); }
+.btn-outline:hover { border-color: var(--green); color: var(--green); }
+.btn-danger-link {
+  background: transparent; border: none; color: var(--red);
+  padding: 8px 10px; min-height: 0;
+}
+.btn-danger-link:hover { color: #ff746c; text-decoration: underline; }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+.btn-loader {
+  width: 14px; height: 14px; border: 2px solid currentColor;
+  border-right-color: transparent; border-radius: 50%;
+  animation: spin .7s linear infinite; display: none;
+}
+.btn.is-loading .btn-loader { display: inline-block; }
+.btn.is-loading .btn-icon { display: none; }
+
+.action-menu { position: relative; margin-left: auto; }
+.btn-menu {
+  width: 36px; justify-content: center; padding: 0; font-size: 18px;
+  letter-spacing: -1px;
+}
+.action-menu-dropdown {
+  display: none; position: absolute; right: 0; top: calc(100% + 6px);
+  min-width: 170px; padding: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; box-shadow: 0 16px 30px rgba(0,0,0,.38);
+  z-index: 40;
+}
+.action-menu.open .action-menu-dropdown { display: flex; flex-direction: column; gap: 4px; }
 .stats { display: flex; gap: 10px; flex-wrap: wrap; }
 .stat-pill { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); font-size: 13px; }
 .stat-pill .num { font-weight: 700; color: var(--green); }
@@ -308,8 +357,11 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
 
 @media (max-width: 768px) {
   .login-card { padding: 32px 20px; margin: 16px; }
-  .topbar { padding: 0 14px; gap: 10px; }
+  .topbar { padding: 0 14px; gap: 8px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
   .topbar-status { display: none; }
+  .save-status { display: none; }
+  .topbar-title { font-size: 13px; }
+  .topbar-badge { font-size: 9px; padding: 4px 8px; }
   .btn-sidebar-toggle { display: flex; align-items: center; justify-content: center; }
   .layout { position: relative; overflow: hidden; }
   .sidebar {
@@ -320,9 +372,14 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
   .sidebar.open { transform: translateX(0); }
   .main-header { padding: 12px 14px 0; gap: 10px; }
   .main-content { padding: 10px 14px 14px; gap: 14px; }
-  .toolbar { gap: 8px; }
+  .toolbar-title-row { align-items: flex-start; }
   .toolbar-title { font-size: 15px; flex: 1; }
-  .btn { padding: 7px 11px; font-size: 12px; }
+  .action-bar { padding: 10px; gap: 8px; }
+  .btn { padding: 8px 11px; font-size: 12px; }
+  .btn-action { flex: 1 1 calc(50% - 6px); justify-content: center; }
+  .action-menu { margin-left: 0; flex: 1 1 calc(50% - 6px); }
+  .btn-menu { width: 100%; }
+  .action-menu-dropdown { left: 0; right: 0; min-width: 0; }
 
   /* Dashboard → vertical cards */
   .table-wrap { background: transparent; border: none; border-radius: 0; overflow: visible; }
@@ -415,13 +472,24 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
 
 <div id="app">
   <div class="topbar">
-    <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
-    <span class="topbar-title">Escala Admin</span>
-    <span class="topbar-badge">Maio 2026</span>
-    <div class="topbar-spacer"></div>
-    <div class="topbar-status"><div class="status-dot"></div><span>Online</span></div>
-    <span class="save-status" id="save-status"></span>
-    <button class="btn-logout" onclick="doLogout()">Sair</button>
+    <div class="topbar-left">
+      <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+      <span class="topbar-title">Escala Admin</span>
+    </div>
+    <div class="topbar-center">
+      <span class="topbar-badge">MAIO 2026</span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-status"><div class="status-dot"></div><span>Online</span></div>
+      <span class="save-status" id="save-status"></span>
+      <button class="btn-logout" onclick="doLogout()" aria-label="Sair">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+    </div>
   </div>
 
   <div class="layout">
@@ -446,13 +514,53 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
 
     <div class="main">
       <div class="main-header">
-        <div class="toolbar">
+        <div class="toolbar-title-row">
           <div class="toolbar-title">Escala Mensal</div>
-          <div class="toolbar-spacer"></div>
-          <button class="btn btn-ghost" onclick="openAutoScheduleModal()">Gerar Escala Automática</button>
-          <button class="btn btn-ghost" onclick="clearAll()">Limpar Escala</button>
-          <button class="btn btn-ghost" onclick="reloadSheet()">Atualizar Dados</button>
-          <button class="btn btn-green" onclick="doDownload()">Exportar PNG</button>
+        </div>
+        <div class="action-bar">
+          <button class="btn btn-primary btn-action" data-idle-text="Exportar PNG" onclick="handleDownloadClick(this)">
+            <span class="btn-loader" aria-hidden="true"></span>
+            <span class="btn-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </span>
+            <span class="btn-label">Exportar PNG</span>
+          </button>
+          <button class="btn btn-outline btn-action" data-idle-text="Gerar Escala Automática" onclick="handleAutoScheduleClick(this)">
+            <span class="btn-loader" aria-hidden="true"></span>
+            <span class="btn-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 4v6h-6"/>
+                <path d="M1 20v-6h6"/>
+                <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10"/>
+                <path d="M20.49 15a9 9 0 0 1-14.13 3.36L1 14"/>
+              </svg>
+            </span>
+            <span class="btn-label">Gerar Escala Automática</span>
+          </button>
+          <button class="btn btn-outline btn-action" data-idle-text="Atualizar Dados" onclick="handleReloadClick(this)">
+            <span class="btn-loader" aria-hidden="true"></span>
+            <span class="btn-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.95-3.36L23 10M1 14l4.54 4.36A9 9 0 0 0 20.49 15"/>
+              </svg>
+            </span>
+            <span class="btn-label">Atualizar Dados</span>
+          </button>
+          <div class="action-menu" id="action-menu">
+            <button class="btn btn-outline btn-menu" onclick="toggleActionMenu(event)" aria-label="Mais opções">⋮</button>
+            <div class="action-menu-dropdown">
+              <button class="btn btn-danger-link" data-idle-text="Limpar Escala" onclick="handleClearAllClick(this)">
+                <span class="btn-loader" aria-hidden="true"></span>
+                <span class="btn-label">Limpar Escala</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="mobile-tabs" id="mobile-tabs">
@@ -1292,6 +1400,76 @@ function closeSidebar() {
 }
 
 /* ── UTILS ── */
+function setButtonLoading(button, loadingText) {
+  if (!button) return function(){};
+  if (button.dataset.loading === '1') return null;
+  var label = button.querySelector('.btn-label');
+  var idleText = button.dataset.idleText || (label ? label.textContent : '');
+  button.dataset.idleText = idleText;
+  button.dataset.loading = '1';
+  button.disabled = true;
+  button.classList.add('is-loading');
+  if (label) label.textContent = loadingText || 'Processando...';
+  return function() {
+    button.dataset.loading = '0';
+    button.disabled = false;
+    button.classList.remove('is-loading');
+    if (label) label.textContent = button.dataset.idleText || idleText;
+  };
+}
+
+function runWithButtonLoading(button, loadingText, action) {
+  var stopLoading = setButtonLoading(button, loadingText);
+  if (!stopLoading) return Promise.resolve();
+  return Promise.resolve()
+    .then(function() { return action(); })
+    .catch(function(err) {
+      throw err;
+    })
+    .finally(function() {
+      stopLoading();
+    });
+}
+
+function closeActionMenu() {
+  var menu = document.getElementById('action-menu');
+  if (menu) menu.classList.remove('open');
+}
+
+function toggleActionMenu(evt) {
+  if (evt) evt.stopPropagation();
+  var menu = document.getElementById('action-menu');
+  if (menu) menu.classList.toggle('open');
+}
+
+function handleAutoScheduleClick(button) {
+  runWithButtonLoading(button, 'Abrindo...', function() {
+    openAutoScheduleModal();
+    return new Promise(function(resolve) { setTimeout(resolve, 200); });
+  }).catch(function() {});
+}
+
+function handleReloadClick(button) {
+  runWithButtonLoading(button, 'Atualizando...', function() {
+    reloadSheet();
+    return new Promise(function(resolve) { setTimeout(resolve, 900); });
+  }).catch(function() {});
+}
+
+function handleClearAllClick(button) {
+  closeActionMenu();
+  runWithButtonLoading(button, 'Limpando...', function() {
+    clearAll();
+    return new Promise(function(resolve) { setTimeout(resolve, 400); });
+  }).catch(function() {});
+}
+
+function handleDownloadClick(button) {
+  runWithButtonLoading(button, 'Exportando...', function() {
+    return doDownload();
+  }).catch(function() {});
+}
+
 function showLoading(msg) {
   document.getElementById('loading-msg').textContent = msg;
   document.getElementById('loading-overlay').classList.remove('hidden');
@@ -1407,57 +1585,67 @@ function clearAll() {
 
 /* ── EXPORT PNG ── */
 function doDownload() {
-  showLoading('Gerando imagem...');
-  var wrap = document.createElement('div');
-  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:900px;padding:48px 52px;background:#f8f9fb;font-family:DM Sans,Arial,sans-serif;color:#0f172a;';
-  var dayMap = { 'Quarta': 'QUARTA-FEIRA', 'Sábado': 'SÁBADO', 'Domingo': 'DOMINGO' };
-  var bd = '#cbd5e1';
-  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-    + '<div style="font-size:13px;font-weight:700;letter-spacing:1.5px;color:#6b7a99;text-transform:uppercase;">MINISTÉRIO DE EVANGELISMO & INTEGRAÇÃO</div>'
-    + '<div style="font-size:13px;font-weight:600;color:#6b7a99;letter-spacing:1px;">MAIO 2026</div></div>'
-    + '<div style="height:2px;background:' + bd + ';margin-bottom:28px;"></div>'
-    + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;border:1px solid ' + bd + ';"><thead><tr>';
-  GROUP_DATES.forEach(function(d) {
-    var dayLabel  = dayMap[d.day] || d.day.toUpperCase();
-    var dateLabel = d.full;
-    html += '<th style="padding:14px 12px;background:#fff;border:1px solid ' + bd + ';text-align:center;vertical-align:top;">'
-      + '<div style="font-size:11px;font-weight:700;color:#5b6fa8;letter-spacing:.8px;margin-bottom:4px;">' + dayLabel + '</div>'
-      + '<div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px;">' + dateLabel + '</div>'
-      + '<div style="font-size:11px;color:#000000;font-weight:600;">' + d.hora + '</div></th>';
+  return new Promise(function(resolve, reject) {
+    showLoading('Gerando imagem...');
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:900px;padding:48px 52px;background:#f8f9fb;font-family:DM Sans,Arial,sans-serif;color:#0f172a;';
+    var dayMap = { 'Quarta': 'QUARTA-FEIRA', 'Sábado': 'SÁBADO', 'Domingo': 'DOMINGO' };
+    var bd = '#cbd5e1';
+    var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+      + '<div style="font-size:13px;font-weight:700;letter-spacing:1.5px;color:#6b7a99;text-transform:uppercase;">MINISTÉRIO DE EVANGELISMO & INTEGRAÇÃO</div>'
+      + '<div style="font-size:13px;font-weight:600;color:#6b7a99;letter-spacing:1px;">MAIO 2026</div></div>'
+      + '<div style="height:2px;background:' + bd + ';margin-bottom:28px;"></div>'
+      + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;border:1px solid ' + bd + ';"><thead><tr>';
+    GROUP_DATES.forEach(function(d) {
+      var dayLabel  = dayMap[d.day] || d.day.toUpperCase();
+      var dateLabel = d.full;
+      html += '<th style="padding:14px 12px;background:#fff;border:1px solid ' + bd + ';text-align:center;vertical-align:top;">'
+        + '<div style="font-size:11px;font-weight:700;color:#5b6fa8;letter-spacing:.8px;margin-bottom:4px;">' + dayLabel + '</div>'
+        + '<div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:4px;">' + dateLabel + '</div>'
+        + '<div style="font-size:11px;color:#000000;font-weight:600;">' + d.hora + '</div></th>';
+    });
+    html += '</tr></thead><tbody><tr>';
+    GROUP_DATES.forEach(function(d) {
+      var names = schedule[d.key] || [];
+      html += '<td style="padding:0;border:1px solid ' + bd + ';vertical-align:top;background:#f8f9fb;text-align:center;">';
+      if (!names.length) {
+        html += '<div style="padding:12px;color:#cbd5e1;font-size:14px;">—</div>';
+      } else {
+        names.forEach(function(name, i) {
+          var bg = i % 2 === 0 ? '#f8f9fb' : '#eef1f6';
+          html += '<div style="padding:8px 12px;background:' + bg + ';font-size:12px;font-weight:700;color:#0f172a;text-align:center;border-bottom:1px solid ' + bd + ';">' + name + '</div>';
+        });
+      }
+      html += '</td>';
+    });
+    html += '</tr></tbody></table>';
+    wrap.innerHTML = html;
+    document.body.appendChild(wrap);
+    setTimeout(function() {
+      html2canvas(wrap, { backgroundColor: '#f8f9fb', scale: 2, useCORS: true, logging: false })
+        .then(function(canvas) {
+          document.body.removeChild(wrap);
+          hideLoading();
+          var link = document.createElement('a');
+          link.download = 'escala-evangelismo-maio-2026.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          resolve();
+        }).catch(function() {
+          document.body.removeChild(wrap);
+          hideLoading();
+          openAlertDialog('Erro na exportação', 'Não foi possível gerar a imagem PNG. Tente novamente.');
+          reject(new Error('download_failed'));
+        });
+    }, 150);
   });
-  html += '</tr></thead><tbody><tr>';
-  GROUP_DATES.forEach(function(d) {
-    var names = schedule[d.key] || [];
-    html += '<td style="padding:0;border:1px solid ' + bd + ';vertical-align:top;background:#f8f9fb;text-align:center;">';
-    if (!names.length) {
-      html += '<div style="padding:12px;color:#cbd5e1;font-size:14px;">—</div>';
-    } else {
-      names.forEach(function(name, i) {
-        var bg = i % 2 === 0 ? '#f8f9fb' : '#eef1f6';
-        html += '<div style="padding:8px 12px;background:' + bg + ';font-size:12px;font-weight:700;color:#0f172a;text-align:center;border-bottom:1px solid ' + bd + ';">' + name + '</div>';
-      });
-    }
-    html += '</td>';
-  });
-  html += '</tr></tbody></table>';
-  wrap.innerHTML = html;
-  document.body.appendChild(wrap);
-  setTimeout(function() {
-    html2canvas(wrap, { backgroundColor: '#f8f9fb', scale: 2, useCORS: true, logging: false })
-      .then(function(canvas) {
-        document.body.removeChild(wrap);
-        hideLoading();
-        var link = document.createElement('a');
-        link.download = 'escala-evangelismo-maio-2026.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }).catch(function() {
-        document.body.removeChild(wrap);
-        hideLoading();
-        openAlertDialog('Erro na exportação', 'Não foi possível gerar a imagem PNG. Tente novamente.');
-      });
-  }, 150);
 }
+
+document.addEventListener('click', function(evt) {
+  var menu = document.getElementById('action-menu');
+  if (!menu) return;
+  if (!menu.contains(evt.target)) closeActionMenu();
+});
 </script>
 </body>
 </html>

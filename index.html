@@ -175,10 +175,42 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
 .slot-cell { min-height: 60px; display: flex; flex-direction: column; gap: 0; align-items: stretch; }
 .name-row {
   padding: 6px 10px; font-size: 12px; font-weight: 600; color: #ffffff;
-  cursor: default; display: flex; align-items: center; justify-content: space-between;
+  cursor: grab; display: flex; align-items: center; justify-content: space-between;
+  transition: opacity .15s, box-shadow .15s, transform .15s;
 }
 .name-row.zebra-even { background: rgba(255,255,255,0.04); }
 .name-row.zebra-odd  { background: rgba(255,255,255,0.09); }
+.name-row.dragging,
+.name-row.touch-source {
+  opacity: .35;
+  box-shadow: 0 0 0 1px rgba(63,185,80,.35) inset;
+}
+.name-row.drop-before { box-shadow: inset 0 2px 0 var(--green); }
+.name-row.drop-after  { box-shadow: inset 0 -2px 0 var(--green); }
+.slot-cell.drop-empty { outline: 2px dashed rgba(63,185,80,.55); outline-offset: -3px; }
+.drag-handle {
+  opacity: .45;
+  margin-right: 8px;
+  font-size: 13px;
+  letter-spacing: -1px;
+  user-select: none;
+  cursor: grab;
+}
+.name-row:active .drag-handle { cursor: grabbing; }
+.name-row .name-text { flex: 1; min-width: 0; }
+.drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  background: #1e2633;
+  border: 1px solid rgba(63,185,80,.55);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(0,0,0,.45);
+}
 .name-row .remove {
   opacity: 0.35; font-size: 15px; cursor: pointer;
   padding: 2px 6px; border-radius: 4px;
@@ -857,6 +889,215 @@ function renderPanel() {
 }
 
 /* ── TABLE ── */
+var dndBound = false;
+var dragState = { active: false, dateKey: null, fromIndex: -1 };
+var touchState = {
+  active: false, started: false, timer: null, row: null,
+  startX: 0, startY: 0, dateKey: null, fromIndex: -1,
+  targetRow: null, targetBefore: false, targetSlot: null, ghost: null
+};
+
+function reorderSchedule(dateKey, fromIndex, toIndex) {
+  var arr = schedule[dateKey];
+  if (!Array.isArray(arr)) return false;
+  if (fromIndex < 0 || fromIndex >= arr.length) return false;
+  if (toIndex < 0) toIndex = 0;
+  if (toIndex > arr.length) toIndex = arr.length;
+  if (fromIndex === toIndex || fromIndex + 1 === toIndex) return false;
+  var moved = arr.splice(fromIndex, 1)[0];
+  if (toIndex > fromIndex) toIndex--;
+  arr.splice(toIndex, 0, moved);
+  return true;
+}
+
+function clearDropHints() {
+  document.querySelectorAll('.name-row.drop-before, .name-row.drop-after').forEach(function(el) {
+    el.classList.remove('drop-before', 'drop-after');
+  });
+  document.querySelectorAll('.slot-cell.drop-empty').forEach(function(el) {
+    el.classList.remove('drop-empty');
+  });
+}
+
+function applyReorderAndPersist(dateKey, fromIndex, toIndex) {
+  if (!reorderSchedule(dateKey, fromIndex, toIndex)) return;
+  saveSchedule();
+  renderAll();
+  renderPanel();
+  syncToSheet();
+}
+
+function getTouchPoint(evt) {
+  return evt.touches && evt.touches[0] ? evt.touches[0]
+       : evt.changedTouches && evt.changedTouches[0] ? evt.changedTouches[0]
+       : null;
+}
+
+function startTouchDrag() {
+  if (!touchState.row) return;
+  touchState.active = true;
+  touchState.started = true;
+  touchState.row.classList.add('touch-source');
+  var ghost = document.createElement('div');
+  ghost.className = 'drag-ghost';
+  ghost.textContent = touchState.row.querySelector('.name-text')
+    ? touchState.row.querySelector('.name-text').textContent
+    : touchState.row.textContent.replace('×', '').trim();
+  document.body.appendChild(ghost);
+  touchState.ghost = ghost;
+}
+
+function updateTouchDropTarget(clientX, clientY) {
+  clearDropHints();
+  touchState.targetRow = null;
+  touchState.targetSlot = null;
+  var target = document.elementFromPoint(clientX, clientY);
+  if (!target) return;
+  var row = target.closest('.name-row');
+  if (row) {
+    var sameDate = row.dataset.dateKey === touchState.dateKey;
+    if (!sameDate) return;
+    var rect = row.getBoundingClientRect();
+    var before = clientY < (rect.top + rect.height / 2);
+    row.classList.add(before ? 'drop-before' : 'drop-after');
+    touchState.targetRow = row;
+    touchState.targetBefore = before;
+    return;
+  }
+  var slot = target.closest('.slot-cell');
+  if (slot && slot.dataset.dateKey === touchState.dateKey) {
+    slot.classList.add('drop-empty');
+    touchState.targetSlot = slot;
+  }
+}
+
+function finishTouchDrag(cancel) {
+  clearTimeout(touchState.timer);
+  touchState.timer = null;
+  clearDropHints();
+  if (touchState.row) touchState.row.classList.remove('touch-source');
+  if (touchState.ghost && touchState.ghost.parentNode) touchState.ghost.parentNode.removeChild(touchState.ghost);
+  if (!cancel && touchState.active) {
+    if (touchState.targetRow) {
+      var toIdx = parseInt(touchState.targetRow.dataset.index, 10);
+      if (!isNaN(toIdx) && !touchState.targetBefore) toIdx++;
+      applyReorderAndPersist(touchState.dateKey, touchState.fromIndex, isNaN(toIdx) ? touchState.fromIndex : toIdx);
+    } else if (touchState.targetSlot) {
+      applyReorderAndPersist(touchState.dateKey, touchState.fromIndex, schedule[touchState.dateKey].length);
+    }
+  }
+  touchState.active = false;
+  touchState.started = false;
+  touchState.row = null;
+  touchState.dateKey = null;
+  touchState.fromIndex = -1;
+  touchState.targetRow = null;
+  touchState.targetSlot = null;
+  touchState.ghost = null;
+}
+
+function bindTableDnD() {
+  if (dndBound) return;
+  dndBound = true;
+  var body = document.getElementById('escala-body');
+  if (!body) return;
+
+  // Desktop (mouse/trackpad)
+  body.addEventListener('dragstart', function(evt) {
+    var row = evt.target.closest('.name-row');
+    if (!row || evt.target.closest('.remove')) { evt.preventDefault(); return; }
+    dragState.active = true;
+    dragState.dateKey = row.dataset.dateKey;
+    dragState.fromIndex = parseInt(row.dataset.index, 10);
+    if (evt.dataTransfer) {
+      evt.dataTransfer.effectAllowed = 'move';
+      evt.dataTransfer.setData('text/plain', 'reorder');
+    }
+    setTimeout(function() { row.classList.add('dragging'); }, 0);
+  });
+
+  body.addEventListener('dragover', function(evt) {
+    if (!dragState.active) return;
+    var row = evt.target.closest('.name-row');
+    var slot = evt.target.closest('.slot-cell');
+    if (!row && !slot) return;
+    evt.preventDefault();
+    clearDropHints();
+    if (row && row.dataset.dateKey === dragState.dateKey) {
+      var rect = row.getBoundingClientRect();
+      var before = evt.clientY < (rect.top + rect.height / 2);
+      row.classList.add(before ? 'drop-before' : 'drop-after');
+    } else if (slot && slot.dataset.dateKey === dragState.dateKey) {
+      slot.classList.add('drop-empty');
+    }
+  });
+
+  body.addEventListener('drop', function(evt) {
+    if (!dragState.active) return;
+    var row = evt.target.closest('.name-row');
+    var slot = evt.target.closest('.slot-cell');
+    evt.preventDefault();
+    if (row && row.dataset.dateKey === dragState.dateKey) {
+      var toIdx = parseInt(row.dataset.index, 10);
+      var rect = row.getBoundingClientRect();
+      if (evt.clientY >= rect.top + rect.height / 2) toIdx++;
+      applyReorderAndPersist(dragState.dateKey, dragState.fromIndex, toIdx);
+    } else if (slot && slot.dataset.dateKey === dragState.dateKey) {
+      applyReorderAndPersist(dragState.dateKey, dragState.fromIndex, schedule[dragState.dateKey].length);
+    }
+    clearDropHints();
+  });
+
+  body.addEventListener('dragend', function() {
+    dragState.active = false;
+    dragState.dateKey = null;
+    dragState.fromIndex = -1;
+    clearDropHints();
+    document.querySelectorAll('.name-row.dragging').forEach(function(el) { el.classList.remove('dragging'); });
+  });
+
+  // Mobile (toque longo)
+  body.addEventListener('touchstart', function(evt) {
+    var row = evt.target.closest('.name-row');
+    if (!row || evt.target.closest('.remove')) return;
+    var p = getTouchPoint(evt);
+    if (!p) return;
+    touchState.row = row;
+    touchState.dateKey = row.dataset.dateKey;
+    touchState.fromIndex = parseInt(row.dataset.index, 10);
+    touchState.startX = p.clientX;
+    touchState.startY = p.clientY;
+    touchState.started = false;
+    clearTimeout(touchState.timer);
+    touchState.timer = setTimeout(startTouchDrag, 220);
+  }, { passive: true });
+
+  body.addEventListener('touchmove', function(evt) {
+    var p = getTouchPoint(evt);
+    if (!p) return;
+    if (touchState.active) {
+      evt.preventDefault();
+      if (touchState.ghost) {
+        touchState.ghost.style.left = (p.clientX + 12) + 'px';
+        touchState.ghost.style.top  = (p.clientY + 12) + 'px';
+      }
+      updateTouchDropTarget(p.clientX, p.clientY);
+      return;
+    }
+    if (touchState.timer) {
+      var dx = Math.abs(p.clientX - touchState.startX);
+      var dy = Math.abs(p.clientY - touchState.startY);
+      if (dx > 8 || dy > 8) {
+        clearTimeout(touchState.timer);
+        touchState.timer = null;
+      }
+    }
+  }, { passive: false });
+
+  body.addEventListener('touchend', function() { finishTouchDrag(false); }, { passive: true });
+  body.addEventListener('touchcancel', function() { finishTouchDrag(true); }, { passive: true });
+}
+
 function renderTable() {
   var head = document.getElementById('escala-head');
   var body = document.getElementById('escala-body');
@@ -865,14 +1106,15 @@ function renderTable() {
   }).join('') + '</tr>';
   var html = '<tr>';
   GROUP_DATES.forEach(function(d) {
-    html += '<td data-label="' + d.day + ' · ' + d.full + ' · ' + d.hora + '"><div class="slot-cell">';
+    html += '<td data-label="' + d.day + ' · ' + d.full + ' · ' + d.hora + '"><div class="slot-cell" data-date-key="' + d.key + '">';
     schedule[d.key].forEach(function(name, i) {
       var z = i % 2 === 0 ? 'zebra-even' : 'zebra-odd';
-      html += '<div class="name-row ' + z + '">' + name + '<span class="remove" onclick="toggleAlloc(\'' + name + '\',\'' + d.key + '\')">×</span></div>';
+      html += '<div class="name-row ' + z + '" draggable="true" data-date-key="' + d.key + '" data-index="' + i + '"><span class="drag-handle">⋮⋮</span><span class="name-text">' + name + '</span><span class="remove" onclick="toggleAlloc(\'' + name + '\',\'' + d.key + '\')">×</span></div>';
     });
     html += '</div></td>';
   });
   body.innerHTML = html + '</tr>';
+  bindTableDnD();
 }
 
 function toggleAlloc(name, dk) {

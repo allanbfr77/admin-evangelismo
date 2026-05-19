@@ -1329,11 +1329,12 @@ function renderAvailGrid() {
       var data    = memberData[name];
       var hasData = data && data.dates && data.dates.length > 0;
       var scheduled         = isScheduled(name);
-      var totallyUnavailable = data && data.totallyUnavailable;
-      var nameClass = 'td-name';
-      if      (scheduled)          nameClass += ' scheduled';
-      else if (totallyUnavailable) nameClass += ' unavailable';
-      else if (!data)              nameClass += ' no-data';
+      var hasResponded = data !== null;
+var zeroAvail    = hasResponded && (!data.dates || data.dates.length === 0);
+var nameClass = 'td-name';
+if      (scheduled)    nameClass += ' scheduled';
+else if (zeroAvail)    nameClass += ' unavailable';
+else if (!data)        nameClass += ' no-data';
       html += '<tr><td class="' + nameClass + '">' + name + '</td>';
       GROUP_DATES.forEach(function(d) {
         var avail = hasData && data.dates.includes(d.key);

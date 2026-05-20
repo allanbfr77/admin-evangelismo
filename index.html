@@ -477,7 +477,7 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
       <span class="topbar-title">MINISTÉRIO DE EVANGELISMO & INTEGRAÇÃO</span>
     </div>
     <div class="topbar-center">
-      <span class="topbar-badge">MAIO 2026</span>
+      <span class="topbar-badge">JUNHO 2026</span>
     </div>
     <div class="topbar-right">
       <div class="topbar-status"><div class="status-dot"></div><span>Online</span></div>
@@ -646,11 +646,11 @@ var ADMIN_PASS = 'medeiros';
 /* key  → ISO 8601 (único identificador interno, enviado à API e ao localStorage)
    label → string de exibição PT-BR (interface visual, cabeçalhos, painel) */
 var GROUP_DATES = [
-  { key: '2026-05-06', label: '06/mai', full: '06 de maio', day: 'Quarta',  hora: '18h às 19h30' },
-  { key: '2026-05-09', label: '09/mai', full: '09 de maio', day: 'Sábado',  hora: '10h às 11h30' },
-  { key: '2026-05-20', label: '20/mai', full: '20 de maio', day: 'Quarta',  hora: '18h às 19h30' },
-  { key: '2026-05-24', label: '24/mai', full: '24 de maio', day: 'Domingo', hora: '17h às 18h30' },
-  { key: '2026-05-30', label: '30/mai', full: '30 de maio', day: 'Sábado',  hora: '9h30 às 11h'  },
+  { key: '2026-06-03', label: '03/jun', full: '03 de junho', day: 'Quarta',  hora: '18h às 19h30' },
+  { key: '2026-06-06', label: '06/jun', full: '06 de junho', day: 'Sábado',  hora: '10h às 11h30' },
+  { key: '2026-06-20', label: '20/jun', full: '20 de junho', day: 'Sábado',  hora: '10h às 11h30'  },
+  { key: '2026-06-24', label: '24/jun', full: '24 de junho', day: 'Quarta',  hora: '18h às 19h30' },
+  { key: '2026-06-28', label: '28/jun', full: '28 de junho', day: 'Domingo', hora: '17h às 18h30' },
 ];
 
 var MEMBERS = [
@@ -668,9 +668,9 @@ GROUP_DATES.forEach(function(d){ schedule[d.key] = []; });
 var selectedPerson = null;
 
 /* ── PERSISTÊNCIA LOCAL (cache / fallback) ── */
-var STORAGE_KEY     = 'escala_evangelismo_maio2026_v2'; // v2 = chaves ISO 8601
-var SESSION_KEY     = 'escala_session_maio2026';
-var SHEET_CACHE_KEY = 'escala_sheet_cache_maio2026';
+var STORAGE_KEY     = 'escala_evangelismo_junho2026_v2'; // v2 = chaves ISO 8601
+var SESSION_KEY     = 'escala_session_junho2026';
+var SHEET_CACHE_KEY = 'escala_sheet_cache_junho2026';
 
 function saveSchedule() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(schedule)); } catch(e) {}
@@ -712,7 +712,7 @@ function setSaveStatus(state) {
 /* ── SINCRONIZAÇÃO COM A PLANILHA ── */
 
 /* Camada de sanitização: converte QUALQUER representação de data recebida
-   (ISO, "06/mai", string longa do Sheets com fuso, Date serializado) para
+   (ISO, "03/jun", string longa do Sheets com fuso, Date serializado) para
    o formato interno ISO 8601 "YYYY-MM-DD". Retorna null se não reconhecer. */
 function formatDateForCode(raw) {
   if (!raw) return null;
@@ -723,8 +723,8 @@ function formatDateForCode(raw) {
     return GROUP_DATES.some(function(g){ return g.key === s; }) ? s : null;
   }
 
-  // 2) Formato legado "06/mai" ou "09/Mai"
-  var mLeg = s.match(/^(\d{1,2})\/mai$/i);
+  // 2) Formato legado "03/jun" ou "06/Jun"
+  var mLeg = s.match(/^(\d{1,2})\/jun$/i);
   if (mLeg) {
     var dd = parseInt(mLeg[1], 10);
     var hit = null;
@@ -1594,7 +1594,7 @@ function doDownload() {
     var bd = '#cbd5e1';
     var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
       + '<div style="font-size:13px;font-weight:700;letter-spacing:1.5px;color:#6b7a99;text-transform:uppercase;">MINISTÉRIO DE EVANGELISMO & INTEGRAÇÃO</div>'
-      + '<div style="font-size:13px;font-weight:600;color:#6b7a99;letter-spacing:1px;">MAIO 2026</div></div>'
+      + '<div style="font-size:13px;font-weight:600;color:#6b7a99;letter-spacing:1px;">JUNHO 2026</div></div>'
       + '<div style="height:2px;background:' + bd + ';margin-bottom:28px;"></div>'
       + '<table style="width:100%;border-collapse:collapse;table-layout:fixed;border:1px solid ' + bd + ';"><thead><tr>';
     GROUP_DATES.forEach(function(d) {
@@ -1628,7 +1628,7 @@ function doDownload() {
           document.body.removeChild(wrap);
           hideLoading();
           var link = document.createElement('a');
-          link.download = 'escala-evangelismo-maio-2026.png';
+          link.download = 'escala-evangelismo-junho-2026.png';
           link.href = canvas.toDataURL('image/png');
           link.click();
           resolve();

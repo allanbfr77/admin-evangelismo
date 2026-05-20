@@ -90,10 +90,14 @@ html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(-
 .topbar-left,
 .topbar-center,
 .topbar-right { display: flex; align-items: center; }
-.topbar-left { justify-content: flex-start; min-width: 0; gap: 12px; }
-.topbar-center { justify-content: center; }
-.topbar-right { justify-content: flex-end; gap: 10px; min-width: 0; }
-.topbar-title { font-size: 14px; font-weight: 700; white-space: nowrap; }
+.topbar-left { justify-content: flex-start; min-width: 0; gap: 12px; overflow: hidden; }
+.topbar-center { justify-content: center; min-width: 0; }
+.topbar-right { justify-content: flex-end; gap: 10px; min-width: 0; flex-shrink: 0; }
+.topbar-title {
+  font-size: 14px; font-weight: 700; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.topbar-title-short { display: none; font-size: 13px; font-weight: 700; white-space: nowrap; }
 .topbar-badge {
   font-size: 10px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase;
   padding: 4px 10px; border-radius: 100px;
@@ -145,11 +149,14 @@ html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(-
 }
 .person-item:hover { background: var(--surface2); }
 .person-item.active { background: var(--green-glow); }
+.person-item.highlight .person-name { color: var(--amber); font-weight: 600; }
+.person-item.highlight.active .person-name { color: var(--amber); }
 .person-name { font-size: 13px; font-weight: 500; flex: 1; }
 .person-count { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 100px; }
 .person-panel { border-top: 1px solid var(--border); padding: 14px; display: none; }
 .person-panel.open { display: block; }
 .panel-name { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+.panel-name.highlight { color: var(--amber); }
 .panel-dates { display: flex; flex-direction: column; gap: 5px; }
 .panel-date-btn {
   display: flex; align-items: center; justify-content: space-between;
@@ -283,6 +290,22 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
 .avail-header strong { font-size: 13px; font-weight: 700; }
 .avail-eye { color: var(--text-3); display: flex; align-items: center; transition: color .15s; }
 .avail-header:hover .avail-eye { color: var(--text-2); }
+.avail-legend {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+  padding: 10px 16px 12px; border-bottom: 1px solid var(--border2);
+}
+.avail-legend-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 11px; color: var(--text-2); line-height: 1.2;
+}
+.avail-legend-swatch {
+  width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+  border: 1px solid var(--border2);
+}
+.avail-legend-swatch.legend-gray  { background: var(--text-3); border-color: var(--text-3); }
+.avail-legend-swatch.legend-white { background: var(--text); border-color: rgba(255,255,255,.35); }
+.avail-legend-swatch.legend-green { background: var(--green); border-color: var(--green); }
+.avail-legend-swatch.legend-red   { background: var(--red); border-color: var(--red); }
 .avail-body { display: none; padding: 14px 16px 16px; }
 .avail-body.open { display: block; }
 .avail-blocks { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -357,12 +380,27 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
 
 @media (max-width: 768px) {
   .login-card { padding: 32px 20px; margin: 16px; }
-  .topbar { padding: 0 14px; gap: 8px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .topbar {
+    padding: 0 12px; gap: 10px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    height: 56px;
+  }
+  .topbar-left { gap: 8px; flex-shrink: 0; }
+  .topbar-center { justify-self: center; padding: 0 4px; }
+  .topbar-right { gap: 0; }
   .topbar-status { display: none; }
   .save-status { display: none; }
-  .topbar-title { font-size: 13px; }
-  .topbar-badge { font-size: 9px; padding: 4px 8px; }
-  .btn-sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+  .topbar-title { display: none; }
+  .topbar-title-short { display: block; }
+  .topbar-badge {
+    font-size: 9px; padding: 4px 8px; white-space: nowrap;
+    max-width: 100%;
+  }
+  .btn-sidebar-toggle {
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; width: 36px; height: 36px; padding: 0;
+  }
+  .btn-logout { flex-shrink: 0; }
   .layout { position: relative; overflow: hidden; }
   .sidebar {
     position: fixed; top: 56px; left: 0; bottom: 0;
@@ -406,6 +444,8 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
   .avail-blocks { flex-direction: column; gap: 14px; }
   .avail-table { font-size: 11px; }
   .avail-table td.td-name { font-size: 11px; }
+  .avail-legend { padding: 10px 14px; gap: 8px 12px; }
+  .avail-legend-item { font-size: 10px; }
 
   /* Mobile tabs */
   .mobile-tabs {
@@ -432,6 +472,11 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
 
   /* Remove touch on name-row — bigger tap zone for × */
   .name-row .remove { padding: 4px 10px; font-size: 16px; }
+}
+
+@media (max-width: 420px) {
+  .topbar { gap: 8px; padding: 0 10px; }
+  .topbar-title-short { display: none; }
 }
 </style>
 </head>
@@ -475,6 +520,7 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
     <div class="topbar-left">
       <button class="btn-sidebar-toggle" onclick="toggleSidebar()">☰</button>
       <span class="topbar-title">MINISTÉRIO DE EVANGELISMO & INTEGRAÇÃO</span>
+      <span class="topbar-title-short">Escala Admin</span>
     </div>
     <div class="topbar-center">
       <span class="topbar-badge">JUNHO 2026</span>
@@ -592,6 +638,24 @@ table.escala tbody td { padding: 10px 16px; border-bottom: 1px solid var(--borde
             </svg>
           </span>
         </div>
+        <div class="avail-legend" aria-label="Legenda de disponibilidades">
+          <div class="avail-legend-item">
+            <span class="avail-legend-swatch legend-gray" aria-hidden="true"></span>
+            <span>Não respondeu</span>
+          </div>
+          <div class="avail-legend-item">
+            <span class="avail-legend-swatch legend-white" aria-hidden="true"></span>
+            <span>Disponibilidade informada</span>
+          </div>
+          <div class="avail-legend-item">
+            <span class="avail-legend-swatch legend-green" aria-hidden="true"></span>
+            <span>Escalado</span>
+          </div>
+          <div class="avail-legend-item">
+            <span class="avail-legend-swatch legend-red" aria-hidden="true"></span>
+            <span>Indisponível no mês</span>
+          </div>
+        </div>
         <div class="avail-body" id="avail-body">
           <div class="avail-blocks" id="avail-blocks"></div>
         </div>
@@ -651,6 +715,11 @@ var GROUP_DATES = [
   { key: '2026-06-20', label: '20/jun', full: '20 de junho', day: 'Sábado',  hora: '10h às 11h30'  },
   { key: '2026-06-24', label: '24/jun', full: '24 de junho', day: 'Quarta',  hora: '18h às 19h30' },
   { key: '2026-06-28', label: '28/jun', full: '28 de junho', day: 'Domingo', hora: '17h às 18h30' },
+];
+
+var HIGHLIGHT_MEMBERS = [
+  'LUCIANE MARTINS', 'VANESSA ROCHA', 'BIANCA M.', 'MARCIO SANTOS',
+  'RODOLFO', 'FERNANDA', 'ZEMA'
 ];
 
 var MEMBERS = [
@@ -1001,6 +1070,10 @@ function renderAll() {
   renderAvailGrid();
 }
 
+function isHighlightMember(name) {
+  return HIGHLIGHT_MEMBERS.indexOf(name) !== -1;
+}
+
 /* ── SIDEBAR ── */
 function renderSidebar() {
   var list   = document.getElementById('sidebar-list');
@@ -1015,7 +1088,9 @@ function renderSidebar() {
     var total   = memberData[name].dates.length;
     var active  = selectedPerson === name;
     var div = document.createElement('div');
-    div.className = 'person-item' + (active ? ' active' : '');
+    div.className = 'person-item'
+      + (active ? ' active' : '')
+      + (isHighlightMember(name) ? ' highlight' : '');
     div.innerHTML = '<div class="person-name">' + name + '</div><div class="person-count">' + isAlloc + '/' + total + '</div>';
     div.onclick = function(){ selectPerson(name); };
     list.appendChild(div);
@@ -1039,9 +1114,14 @@ function renderPanel() {
   var panel = document.getElementById('person-panel');
   var datesDiv = document.getElementById('panel-dates');
   var panelName = document.getElementById('panel-name');
-  if (!selectedPerson) { panel.classList.remove('open'); return; }
+  if (!selectedPerson) {
+    panel.classList.remove('open');
+    panelName.classList.remove('highlight');
+    return;
+  }
   panel.classList.add('open');
   panelName.textContent = selectedPerson;
+  panelName.classList.toggle('highlight', isHighlightMember(selectedPerson));
   var dateOrder = GROUP_DATES.map(function(d){ return d.key; });
   var dates = ((memberData[selectedPerson] && memberData[selectedPerson].dates) || [])
     .slice()
